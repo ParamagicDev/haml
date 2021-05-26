@@ -66,14 +66,21 @@ module Haml
     #
     # @return [String]
     def precompiled_with_ambles(local_names, after_preamble: '')
-      preamble = <<END.tr("\n", ';')
+      if ActionView::Base.annotate_template_file_names
+        preamble = <<END.tr("\n", "<!-- BEGIN #{short_identifier} -->;")
+        postamble = <<END.tr("\n", "<!-- END #{short_identifier} -->;")
+      else
+        preamble = <<END.tr("\n", ';')
+        postamble = <<END.tr("\n", ';')
+      end
+
 begin
 extend Haml::Helpers
 _hamlout = @haml_buffer = Haml::Buffer.new(haml_buffer, #{Options.new(options).for_buffer.inspect})
 _erbout = _hamlout.buffer
 #{after_preamble}
 END
-      postamble = <<END.tr("\n", ';')
+
 #{precompiled_method_return_value}
 ensure
 @haml_buffer = @haml_buffer.upper if @haml_buffer
